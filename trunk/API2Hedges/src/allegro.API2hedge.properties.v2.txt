@@ -7,7 +7,7 @@
 #db.driver		= oracle.jdbc.driver.OracleDriver
 #db.dataSource	= jdbc:oracle:thin:@devdb1.aci.corp.net:1521:devaci1
 #db.userName	= blackfordm
-#db.passWord	= ginger-08
+#db.passWord	= PASSWORD-08
 
 ############################################################
 #  TEST-
@@ -18,7 +18,7 @@
 #db.dataSource	= jdbc:oracle:thin:@testdb1.aci.corp.net:1523:testaci2
 ##db.dataSource	= jdbc:oracle:thin:@ldap:oid.archcoal.com:3060/testaci2,cn=OracleContext,dc=aci,dc=corp,dc=net
 #db.userName	= blackfordm
-#db.passWord	= Ginger-08
+#db.passWord	= PASSWORD-08
 
 ############################################################
 #  PROD
@@ -28,7 +28,7 @@ db.driver		= oracle.jdbc.driver.OracleDriver
 #db.sid		= prodaci1
 db.dataSource	= jdbc:oracle:thin:@acidb1.aci.corp.net:1522:prodaci1
 db.userName	= blackfordm
-db.passWord	= Ginger-08
+db.passWord	= PASSWORD-08
 
 
 db.sql.priceDate = SYSDATE
