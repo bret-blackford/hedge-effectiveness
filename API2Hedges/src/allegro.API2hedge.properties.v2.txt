@@ -1,0 +1,69 @@
+############################################################
+#
+#  Property file for Allegro Security Review
+#
+############################################################
+#  DEV
+#db.driver		= oracle.jdbc.driver.OracleDriver
+#db.dataSource	= jdbc:oracle:thin:@devdb1.aci.corp.net:1521:devaci1
+#db.userName	= blackfordm
+#db.passWord	= ginger-08
+
+############################################################
+#  TEST-
+#db.driver		= oracle.jdbc.driver.OracleDriver
+#db.server		= acidb1.aci.corp.net
+#db.port		= 1523
+#db.sid		= testaci2
+#db.dataSource	= jdbc:oracle:thin:@testdb1.aci.corp.net:1523:testaci2
+##db.dataSource	= jdbc:oracle:thin:@ldap:oid.archcoal.com:3060/testaci2,cn=OracleContext,dc=aci,dc=corp,dc=net
+#db.userName	= blackfordm
+#db.passWord	= Ginger-08
+
+############################################################
+#  PROD
+db.driver		= oracle.jdbc.driver.OracleDriver
+#db.server		= acidb1.aci.corp.net
+#db.port		= 1522
+#db.sid		= prodaci1
+db.dataSource	= jdbc:oracle:thin:@acidb1.aci.corp.net:1522:prodaci1
+db.userName	= blackfordm
+db.passWord	= Ginger-08
+
+
+db.sql.priceDate = SYSDATE
+#db.sql.priceDate = 2014-01-31
+
+############################################################
+#  Database Queries 
+#
+#db.sql.price.table = SELECT apv.priceindex, apv.pricedate, apv.price, apv.delivdate, to_char(APV.PRICEDATE, 'yyyy-mm') as Price_YYYYMM, to_char(APV.DELIVDATE, 'yyyy-mm') as Deliv_YYYYMM FROM allegro.pricevalue apv WHERE (   apv.priceindex IN ('Argus-McClosky-API-2_Monthly','Argus-McClosky-API-2_Monthly-CME', 'GC-DES-ARA') OR apv.priceindex IN ('ICE-API-2', 'CME-API-2') ) AND apv.pricedate > '31-dec-2013' AND (apv.delivdate > '31-MAR-2014' AND apv.delivdate < '1-OCT-2014') ORDER BY apv.pricedate DESC, APV.PRICEINDEX, APV.DELIVDATE
+db.sql.price.table =SELECT apv.priceindex, apv.pricedate, apv.price, apv.delivdate, TO_CHAR (apv.pricedate, 'yyyy-mm') AS price_yyyymm, TO_CHAR (apv.delivdate, 'yyyy-mm') AS deliv_yyyymm FROM allegro.pricevalue apv WHERE (   apv.priceindex IN ('Argus-McClosky-API-2_Monthly', 'Argus-McClosky-API-2_Monthly-CME', 'GC-DES-ARA') OR apv.priceindex IN ('ICE-API-2', 'CME-API-2') ) AND apv.pricedate > SYSDATE - 60 AND apv.delivdate < SYSDATE + 360 ORDER BY apv.pricedate DESC, apv.priceindex, apv.delivdate
+#
+#####
+db.sql.API2hedges.userAccess = SELECT   atr.tradepurpose "Purpose", aval.execution, aval.positiontype "PoS", aval.description, TO_CHAR (atr.creationdate, 'yyyy-mm-dd') "CreatedOn", atr.trade, aval.price, aval.priceindex, apos.accountingmethod, TO_CHAR (aval.begtime, 'yyyy-mm') "BegDate", aval.quantitystatus, atr.timeperiod, aval.begtime, aval.endtime, aval.counterparty, aval.product, aval.tradebook, aval.quantity, aval.marketprice, aval.VALUE, aval.marketvalue, aval.LOCATION, aval.pricestatus "STATUS", aval.valuation, aval.company "Co.", aval.pricequantity FROM allegro.valuationdetail aval, allegro.trade atr, allegro.POSITION apos WHERE aval.trade = atr.trade AND aval.trade = apos.trade AND (    UPPER (apos.accountingmethod) LIKE 'CASH FLOW HEDGE%' AND aval.product = 'API-2' ) AND aval.valuation IN (SELECT MAX (valuu.valuation) FROM allegro.valuation valuu WHERE valuu.valuationmode = 'MTM Ton') AND atr.creationdate > '5-Oct-2010' AND (    aval.description NOT LIKE '%Fee%' AND aval.description NOT LIKE '%Clearing%' ) AND (( aval.begtime < (SYSDATE - 29) AND aval.quantitystatus IN ('ACTUAL', 'BOOKOUT') OR aval.begtime > SYSDATE - 36 ) ) AND aval.begtime > '31-DEC-2013' ORDER BY atr.tradepurpose, aval.execution, aval.positiontype, atr.trade,aval.description,aval.begtime
+db.sql.API2hedges.tradeValuations = SELECT atr.tradepurpose "Purpose", aval.execution, aval.positiontype "PoS", aval.description, TO_CHAR (atr.creationdate, 'yyyy-mm-dd') "CreatedOn", atr.trade, aval.price, aval.priceindex, apos.accountingmethod, TO_CHAR (aval.begtime, 'yyyy-mm') "BegDate", aval.quantitystatus, atr.timeperiod, to_char(aval.begtime,'yyyy-mm-dd') as begtime, aval.endtime, aval.counterparty, aval.product, aval.tradebook, aval.quantity, aval.marketprice, aval.VALUE, aval.marketvalue, aval.LOCATION, aval.pricestatus "STATUS", aval.valuation, aval.company "Co.", aval.pricequantity, to_char(SYSDATE-1,'yyyy-mm-dd') "SYSDATE", To_Char(ATR.TRADEDATE,'yyyy-mm-dd') as tradedate FROM allegro.valuationdetail aval, allegro.trade atr, allegro.POSITION apos WHERE aval.trade = atr.trade AND aval.trade = apos.trade AND (    UPPER (apos.accountingmethod) LIKE 'CASH FLOW HEDGE%' AND aval.product = 'API-2' ) AND aval.valuation IN (SELECT MAX (valuu.valuation) FROM allegro.valuation valuu WHERE valuu.valuationmode = 'MTM Ton' and VALUU.STATUS = 'COMPLETE') AND ( aval.description NOT LIKE '%Fee%' AND aval.description NOT LIKE '%Clearing%' ) AND (( aval.begtime < (SYSDATE - 29) AND aval.quantitystatus IN ('ACTUAL', 'BOOKOUT') OR aval.begtime > SYSDATE - 36 ) ) ORDER BY atr.tradepurpose, aval.execution, aval.positiontype, atr.trade,aval.description,aval.begtime
+#db.sql.API2hedges.tradeValuations = SELECT   atr.tradepurpose "Purpose", aval.execution, aval.positiontype "PoS", aval.description, TO_CHAR (atr.creationdate, 'dd-MON-yyyy') "CreatedOn", atr.trade, aval.price, aval.priceindex, apos.accountingmethod, TO_CHAR (aval.begtime, 'dd-MON-yyyy') "BegDate", aval.quantitystatus, atr.timeperiod, to_char(aval.begtime,'dd-MON-yyyy') as begtime, aval.endtime, aval.counterparty, aval.product, aval.tradebook, aval.quantity, aval.marketprice, aval.VALUE, aval.marketvalue, aval.LOCATION, aval.pricestatus "STATUS", aval.valuation, aval.company "Co.", aval.pricequantity, to_char(SYSDATE-1,'dd-MON-yyyy') "SYSDATE" FROM allegro.valuationdetail aval, allegro.trade atr, allegro.POSITION apos WHERE aval.trade = atr.trade AND aval.trade = apos.trade AND (    UPPER (apos.accountingmethod) LIKE 'CASH FLOW HEDGE%' AND aval.product = 'API-2' ) AND aval.valuation IN (SELECT MAX (valuu.valuation) FROM allegro.valuation valuu WHERE valuu.valuationmode = 'MTM Ton') AND atr.creationdate > '5-Oct-2010' AND (    aval.description NOT LIKE '%Fee%' AND aval.description NOT LIKE '%Clearing%' ) AND (( aval.begtime < (SYSDATE - 29) AND aval.quantitystatus IN ('ACTUAL', 'BOOKOUT') OR aval.begtime > SYSDATE - 36 ) ) AND aval.begtime > '31-DEC-2013' ORDER BY atr.tradepurpose, aval.execution, aval.positiontype, atr.trade,aval.description,aval.begtime
+#db.sql.API2hedges.tradeValuations = SELECT atr.tradepurpose "Purpose", aval.execution, aval.positiontype "PoS",aval.description, TO_CHAR (atr.creationdate, 'yyyy-mm-dd') "CreatedOn", atr.trade, aval.price, aval.priceindex, apos.accountingmethod, TO_CHAR (aval.begtime, 'yyyy-mm') "BegDate", aval.quantitystatus, atr.timeperiod, TO_CHAR (aval.begtime, 'yyyy-mm-dd') AS begtime,aval.endtime, aval.counterparty, aval.product, aval.tradebook,aval.quantity, aval.marketprice, aval.VALUE, aval.marketvalue, aval.LOCATION, aval.pricestatus "STATUS", aval.valuation, aval.company "Co.", aval.pricequantity, TO_CHAR (SYSDATE - 1, 'yyyy-mm-dd') "SYSDATE", TO_CHAR (atr.tradedate, 'yyyy-mm-dd') AS tradedate, ATR.TRADESTATUS, AVAL.TRADEBOOK FROM allegro.valuationdetail aval, allegro.trade atr, allegro.POSITION apos WHERE aval.trade = atr.trade AND aval.trade = apos.trade AND aval.product = 'API-2' AND aval.valuation IN (SELECT MAX (valuu.valuation) FROM allegro.valuation valuu WHERE valuu.valuationmode = 'MTM Ton') AND UPPER (aval.tradebook) NOT LIKE '%TRAD%' AND UPPER (aval.tradebook) NOT LIKE '%SCEN%'  AND (    aval.description NOT LIKE '%Fee%' AND aval.description NOT LIKE '%Clearing%' ) AND (( aval.begtime < (SYSDATE - 29)  AND aval.quantitystatus IN ('ACTUAL', 'BOOKOUT') OR aval.begtime > SYSDATE - 36 ) ) ORDER BY atr.tradepurpose, aval.execution, aval.positiontype, atr.trade, aval.description, aval.begtime
+
+#
+#####
+db.sql.pricedates.unique = SELECT distinct( TO_CHAR(apv.pricedate, 'yyyy-mm') ) as priceYYYYMM FROM allegro.pricevalue apv WHERE (   apv.priceindex IN ('Argus-McClosky-API-2_Monthly','Argus-McClosky-API-2_Monthly-CME', 'GC-DES-ARA') OR apv.priceindex IN ('ICE-API-2', 'CME-API-2') ) AND apv.pricedate > '31-dec-2013' AND apv.delivdate > '31-MAR-2014' 
+#
+#####
+db.sql.MinMax.pricedate = SELECT   pv.priceindex, pv.delivdate, pv.pricedate, pv.price, to_char(PV.DELIVDATE, 'yyyy-mm') as delivdt, to_char(PV.PRICEDATE, 'yyyy-mm') as pricedt FROM allegro.pricevalue pv WHERE pv.priceindex IN ('CME-API-2', 'GC-DES-ARA', 'ICE-API-2') AND pv.pricedate > '31-dec-2013'  AND pv.pricedate =  (SELECT MIN (a.pricedate) FROM allegro.pricevalue a  WHERE a.priceindex = pv.priceindex AND a.delivdate = pv.delivdate  AND TO_CHAR (a.pricedate, 'YYYYMM') = TO_CHAR (pv.pricedate, 'YYYYMM')) UNION SELECT DISTINCT pv.priceindex, pv.delivdate, pv.pricedate, pv.price,to_char(PV.DELIVDATE, 'yyyy-mm') as delivdt,to_char(PV.PRICEDATE, 'yyyy-mm') as pricedt  FROM allegro.pricevalue pv WHERE pv.priceindex IN ('CME-API-2', 'GC-DES-ARA', 'ICE-API-2') AND pv.pricedate = (SELECT MAX (a.pricedate) FROM allegro.pricevalue a WHERE a.priceindex = pv.priceindex  AND a.delivdate = pv.delivdate AND TO_CHAR (a.pricedate, 'YYYYMM') = TO_CHAR (pv.pricedate, 'YYYYMM'))  AND pv.pricedate > '31-dec-2013' ORDER BY priceindex, delivdate, pricedate
+db.sql.MinMax.pricedate2 = SELECT   pv.priceindex, pv.delivdate, pv.pricedate, pv.price, to_char(PV.DELIVDATE, 'yyyy-mm') as delivdt, to_char(PV.PRICEDATE, 'yyyy-mm') as pricedt, to_char(PV.DELIVDATE, 'yyyy-mm-dd') as delivday, to_char(PV.PRICEDATE, 'yyyy-mm-dd') as priceday FROM allegro.pricevalue pv WHERE pv.priceindex IN ('CME-API-2', 'GC-DES-ARA', 'ICE-API-2') AND pv.pricedate > '31-dec-2013'  AND pv.pricedate =  (SELECT MIN (a.pricedate) FROM allegro.pricevalue a  WHERE a.priceindex = pv.priceindex AND a.delivdate = pv.delivdate  AND TO_CHAR (a.pricedate, 'YYYYMM') = TO_CHAR (pv.pricedate, 'YYYYMM')) UNION SELECT DISTINCT pv.priceindex, pv.delivdate, pv.pricedate, pv.price,to_char(PV.DELIVDATE, 'yyyy-mm') as delivdt,to_char(PV.PRICEDATE, 'yyyy-mm') as pricedt,  to_char(PV.DELIVDATE, 'yyyy-mm-dd') as delivday, to_char(PV.PRICEDATE, 'yyyy-mm-dd') as priceday FROM allegro.pricevalue pv WHERE pv.priceindex IN ('CME-API-2', 'GC-DES-ARA', 'ICE-API-2') AND pv.pricedate = (SELECT MAX (a.pricedate) FROM allegro.pricevalue a WHERE a.priceindex = pv.priceindex  AND a.delivdate = pv.delivdate AND TO_CHAR (a.pricedate, 'YYYYMM') = TO_CHAR (pv.pricedate, 'YYYYMM'))  AND pv.pricedate > '31-dec-2013' ORDER BY priceindex, delivdate, pricedate
+#
+#####
+db.sql.dynamic.MinMax = select max(APV.PRICEDATE)as MAX, min(APV.PRICEDATE) as MIN from ALLEGRO.PRICEVALUE apv where APV.PRICEINDEX = ? and to_char(APV.PRICEDATE,'yyyy-mm') = ? and to_char(APV.DELIVDATE,'yyyy-mm') = ?
+#
+#####
+db.sql.MinMaxFx = {? = call cpms.allegro_price_pkg.get_price_diff(?,?,?,?)}
+
+############################################################
+#  Output File Path and Name
+#
+#out.file.path.name = C:\\JavaProgramInfo\\logs\\test1\\API2hedges.txt
+out.file.path.name = \\\\stlsrv2\\midoffice\\Accounting\\HedgeEffectiveness\\API2-Effectiveness\\ReportsAndLogs\\API2hedges.txt
+out.file.path = \\\\stlsrv2\\midoffice\\Accounting\\HedgeEffectiveness\\API2-Effectiveness\\ReportsAndLogs\\
+out.file.name = API2-Hedges_
