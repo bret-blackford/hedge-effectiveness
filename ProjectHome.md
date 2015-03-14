@@ -1,0 +1,1 @@
+Derivative hedge effectiveness calculation
